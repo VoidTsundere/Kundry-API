@@ -1,5 +1,6 @@
 import random
 from string import ascii_uppercase
+import objects
 
 battle_list = []
 acc_list = []
@@ -20,101 +21,13 @@ class account:
         acc_data = account.get_account_data(ID)
         char_list = acc_data["characters"]
         
-        new_character_data = obj.character
+        new_character_data = objects.obj.character
         new_character_data.update({"id":character_id})
         
         char_list.append(new_character_data)
         acc_data.update({"characters":char_list})
 
-class obj:
-    player_account = {
-        "name":str,
-        "password":str,
-        "id":account.new_acc_id(),
-        "history_progress":0,
-        "currency":{
-            "coins":0,
-            "souls":0,
-            "crystal":0
-            },
-        "inventory":[],
-        "account_lvl":0,
-        "account_xp":0,
-        "characters":[]}
-    
-    battle_obj = {
-        "id":"null",
-        "entity_list":"null",
-        "turn_code":0,
-        "turn":0,
-        "effect_list":[]}
-    
-    character = {
-        "id":int,
-        "lvl":0,
-        "skill_lvl":0}
-    
-    effect = {"enity_id":"null",
-              "effect_id":"null",
-              "duration":0}
 
-class cards:
-    class id:
-        list = {
-        0: {'name': 'testCard Attack',  # Define o nome da carta
-        'desc':'Carta de testes Attack', #descrição da carta
-        'type':'attack', #define o tipo da carte entre: attack, heal, enchance, defense
-        'dmg':1, #dano base da carta
-        'crit':1.5, #multiplicador de dano em caso de critico
-        'lvl_mult':1.1, #multplicador de Dano dependendo do nivel da carta
-        'max_lvl':10}, #nivel máximo da carta
-        
-        1: {'name':'testCard Heal',
-        'desc':'Carta de testes Heal',
-        'type':'heal',
-        'heal':2,
-        'crit':2,
-        'lvl_mult':1.1,
-        'max_lvl':10},
-        2: {'name': 'testCard enchance',
-        'desc': 'Carta de testes Enchance',
-        'type': 'enchance',
-        'enchance': 3,
-        'crit': 1.5,
-        'lvl_mult': 1.2,
-        'max_lvl': 10},
-        3: {'name': 'testCard defense',
-        'desc': 'Carta de testes Defense',
-        'type': 'defense',
-        'def': 2,
-        'crit': 2,
-        'lvl_mult': 1.2,
-        'max_lvl': 10}
-        }
-        
-class entity:
-    class id:
-        list = {
-        0:{'type':'testObj', #tipo da entidade deve ser entre normal, elite, boss ou testObj para testes.
-        'name':'ADM Doll',  #nome da entidade
-        'desc': 'a boneca de testes do ademir', #descrição da entidade que pode ser lida dentro do jogo
-        'max_hp':1000, #hp máximo da entidade para inpedir que ela possa curar mais do que o máximo de vida.
-        'card_list': [0, 1, 2, 3]}  # lista contendo as cartas dessa entidade, essa lista deve possuir 20 cartas
-        }
-
-class characters:
-    class id:
-        list = {
-            0:{'name':'Hiro', #Nome do personagem
-            'desc':'Heroi falso', #Descrição acessivel dentro do jogo
-            'type':'attack', #Classe do personagem entre attack, sup e berserker
-            'hp': 10, #hp máximo do personagem
-            'ult_charge':100, #valor de consumo de energia da suprema
-            'card_list':[0,1,2,3], #lista de cartas do personagens
-            'max_lvl':'10', #nivel máximo do personagem
-            'lvl_mult':1.5 #multiplicador de estatus por nível
-            }
-        }
 
 class battle:
     def battle_code():
@@ -130,13 +43,12 @@ class battle:
             return
         
         def player_opt(battle): #retorna as cartas que o jogador pode usar
-            entity_in_charge = battle["entity_list"][battle["turn"]]
+            entity_in_charge = battle["entity_list"][battle["turn_code"]]
             if 'c' in entity_in_charge: #retorna os dados do personagem caso seja o turno dele
                 character_id = int(entity_in_charge.replace('c',''))
-                print(characters.id.list[character_id])
+                #print(objects.characters.id.list[character_id])
             if 'e' in entity_in_charge: #retorna os dados da entidade caso seja o turno delas
                 enemy_id = int(entity_in_charge.replace('e',''))
-                print(entity.id.list[enemy_id])
             return
         
         action_list = { #dict com todas as ações que podem ser passadas pela api
@@ -162,7 +74,7 @@ class battle:
                 except:
                     break
                 
-        match_data = obj.battle_obj
+        match_data = objects.obj.battle_obj
         match_data.update({"id":battle.battle_code(),
                            "entity_list": battle_order})
                 
@@ -182,13 +94,13 @@ class battle:
 
 
 battle_list.append(battle.create(['c0'], ['e0']))
-battle.next_turn('DERE-00')
-battle.next_turn('DERE-00')
-battle.next_turn('DERE-00')
-#battle.turn_action('DERE-00', "player_opt")
+#battle.next_turn('DERE-00')
+# battle.next_turn('DERE-00')
+# battle.next_turn('DERE-00')
+battle.turn_action('DERE-00', "player_opt")
 
-acc = obj.player_account
-acc.update({"name":"Dere","password":"dere123"})
+acc = objects.obj.player_account
+acc.update({"name":"Dere","password":"dere123","id":account.new_acc_id()})
 acc_list.append(acc)
 account.add_new_character(100,0)
 print(account.get_account_data(100))
