@@ -1,10 +1,16 @@
 #import engine
 import json
 FORMAT = 'utf-8'
+HEADER = 64
 
 def Get_test():
     msg = "Test successful!"
-    return str(len(msg.encode(FORMAT))), msg
+    message = msg.encode(FORMAT)
+    msg_lenght = len(message)
+    send_lenght = str(msg_lenght).encode(FORMAT)
+    send_lenght += b' ' * (HEADER - len(send_lenght))
+    
+    return send_lenght, msg
 
 def Post_test(data):
     msg = {"code":"success","msg":"Test successful!"}

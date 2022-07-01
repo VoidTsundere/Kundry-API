@@ -1,6 +1,7 @@
 import socket
 import pickle
 import json
+import time
 
 HEADER = 64  # tamanho da primeira msg
 PORT = 5050
@@ -9,13 +10,17 @@ DISCONNECT_MESSAGE = "!DISCONNECT"
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(ADDR)
+try:
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.settimeout(10)
+    client.connect(ADDR)
+    client.settimeout(None)
+except: print("[CONNECTION ERROR] Connection timeout")
 
 def get():
     back_header = client.recv(HEADER).decode(FORMAT)
     return_message = client.recv(int(back_header)).decode(FORMAT)
-    print(return_message)
+    return return_message
 
 def Send_get(msg):
     message = msg.encode(FORMAT)
@@ -25,7 +30,7 @@ def Send_get(msg):
     client.send(send_lenght)
     client.send(message)
     if msg != DISCONNECT_MESSAGE:
-        get()
+        return get()
         
 def Send_post(key, msg):
     structure = {"key":key, "msg":msg}
@@ -35,8 +40,8 @@ def Send_post(key, msg):
     #print(message, send_lenght)
     client.send(send_lenght)
     client.send(message)
-    get()
+    return get()
 
 Send_get("!GET_TEST")
-Send_post("!POST_TEST", "dere")
+#Send_post("!POST_TEST", "dere")
 Send_get(DISCONNECT_MESSAGE)

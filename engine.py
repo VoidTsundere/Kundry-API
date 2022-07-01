@@ -1,32 +1,120 @@
 import random
 from string import ascii_uppercase
 import objects
+import pymongo
+
+bd_pass = "iDn4HavIPEKnOAJl"
 
 battle_list = []
 acc_list = []
 
+T5_CHANCE = 1.75
+T4_CHANCE = 7.5
 
 class account:
+    def gacha_pull(ID, gacha_code, rolls):
+        acc_data = account.get_account_data(ID)
+        pool = objects.gacha.pools.pool_list[gacha_code]
+        garantee = acc_data["gacha_data"][pool["pool_type"]]
+        
+        
+        def final():
+            new_data = acc_data
+            new_data["currency"]["souls"] -= rolls*5
+            new_data["gacha_data"][pool["pool_type"]] = garantee
+            update_data = {"$set": {"gacha_data": new_data["gacha_data"]},"$set":{"currency": new_data["currency"]}}
+            ACCOUNTS.update_one({"id": ID}, update_data)
+        
+        def pull_result(result):
+            return (pool[result][random.randrange(0, len(pool[result]))])
+        
+        if acc_data["currency"]["souls"] >= rolls*5:
+            for x in range(rolls):
+                roll = random.randrange(0, 1000)/10
+                
+                if garantee[0]+1 == 10:
+                    garantee[0] = 0
+                    garantee[1] += 1
+                    roll_result = pull_result("T4")
+                    
+                elif garantee[1]+1 == 80:
+                    garantee[1] = 0
+                    garantee[1] += 1
+                    roll_result = pull_result("T5")
+                    
+                else:
+                    garantee[0] += 1
+                    garantee[1] += 1
+                    
+                    if roll <= T5_CHANCE:
+                        garantee[1] = 0
+                        roll_result = pull_result("T5")
+                        
+                    elif roll <= T4_CHANCE:
+                        garantee[0] = 0
+                        roll_result =  pull_result("T4")
+                        
+                    else:
+                        roll_result =  pull_result("T3")
+                    
+                if "C" in roll_result:
+                        print(objects.characters.id.list[roll_result]["name"], garantee)
+                        
+                if "I" in roll_result:
+                        print(objects.itens.list[roll_result]["name"], garantee)
+                        
+            final()
+        else:
+            print("Not enough souls")
+                    
+    def create_account(name, password):
+        new_acc_data = objects.obj.player_account
+        new_acc_data.update({"name": name, "password": password, "id": account.new_acc_id()})
+        return new_acc_data
+        
     def get_account_data(ID):
-        for acc_data in acc_list:
-            if acc_data["id"] == ID:
-                return acc_data
+        try:
+            search = ACCOUNTS.find_one({"id": ID})
+            return search
+        except:
+            return None
     
-    def new_acc_id():  # todo Verificar se o ID já existe no server e então retornar ID
-        id = random.randrange(100000, 999999)
-        idd = 100 #! DEBUG
-        return idd
+    def new_acc_id():
+        while True:
+            gen_id = random.randrange(100000000, 999999999)
+            search = ACCOUNTS.find_one({"id": gen_id})
+            if type(search) != dict:
+                return gen_id
+                break
     
-    def add_new_character(ID, character_id): #todo REWORK POST SERVER
+    def add_new_character(ID, character_id): #! REWORK 
         acc_data = account.get_account_data(ID)
         char_list = acc_data["characters"]
         
-        new_character_data = objects.obj.character
-        new_character_data.update({"id":character_id})
+        def update():
+            update_data = {"$set": {"characters": char_list}}
+            ACCOUNTS.update_one({"id": ID}, update_data)
         
-        char_list.append(new_character_data)
+        for nums, dicts in enumerate(char_list):
+            if character_id == dicts["id"]:
+                if char_list[nums]["copy"] +1 == 11:
+                    print("Copy limit")
+                    return #! here
+                char_list[nums]["copy"] += 1
+                update()
+                return #! here
+                
+        character_obj = objects.obj.character
+        character_obj.update({"id": character_id})
+        char_list.append(character_obj)
+                
         acc_data.update({"characters":char_list})
+        update()
+        return #! here
 
+    def add_currency(ID, currency, ammount):
+        acc_data = get_account_data(ID)
+        return
 
 
 class battle:
@@ -34,7 +122,6 @@ class battle:
         code = ''.join(random.choice(ascii_uppercase) for x in range(4))
         
         return "DERE-00" #! DEBUG
-        
         return code + "-" +str(random.randrange(10, 99))
     
     def turn_action(match_id, action):
@@ -75,8 +162,7 @@ class battle:
                     break
                 
         match_data = objects.obj.battle_obj
-        match_data.update({"id":battle.battle_code(),
-                           "entity_list": battle_order})
+        match_data.update({"id":battle.battle_code(),"entity_list": battle_order})
                 
         return match_data
     
@@ -92,17 +178,17 @@ class battle:
         return
 
 
-
-battle_list.append(battle.create(['c0'], ['e0']))
-#battle.next_turn('DERE-00')
-# battle.next_turn('DERE-00')
-# battle.next_turn('DERE-00')
-battle.turn_action('DERE-00', "player_opt")
-
-acc = objects.obj.player_account
-acc.update({"name":"Dere","password":"dere123","id":account.new_acc_id()})
-acc_list.append(acc)
-account.add_new_character(100,0)
-print(account.get_account_data(100))
-
-print("\n\n",battle_list)
+if __name__ == "__main__":
+    db_client = pymongo.MongoClient("mongodb+srv://kurony:iDn4HavIPEKnOAJl@kundryapi.zauacf5.mongodb.net/?retryWrites=true&w=majority")
+    db = db_client.kundryDB
+    ACCOUNTS = db.ACCOUNTS
+    BATTLES = db.BATTLES
+    
+    
+    #ACCOUNTS.insert_one(account.create_account("dere", "dere123"))
+    #BATTLES.insert_one(battle.create(['c0'],['e1']))
+    
+    #account.gacha_pull(875495425, "pool-0", 10)
+    account.add_new_character(875495425, "C-1")
+    
+    #print("\n\n", ACCOUNTS.find_one({"id": 200545478}))

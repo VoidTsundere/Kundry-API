@@ -15,26 +15,30 @@ server.bind(ADDR)
 
 def handler(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected")
+    conn.settimeout(10)
     
     connected = True
     while connected:
         msg_lenght = conn.recv(HEADER).decode(FORMAT) #Recebe a primeira msg
-        if msg_lenght: #caso exista algum valor na msg
+        if msg_lenght:  # caso exista algum valor na msg
             msg_lenght = int(msg_lenght) #tranforma a mensagem em int para escutar por esse valor dee bytes na próxima msg
+            conn.settimeout(10)
             msg = conn.recv(msg_lenght).decode(FORMAT) #espera a mensagem
             
             if DISCONNECT_MESSAGE in msg:
                 connected = False
-                print(f"[DISCONNECTED] {addr}")
+                print(f"[DISCONNECTED] {addr}\n")
                 break
             
             print(f'[{addr}] {msg}')
             if "!GET" in msg:
+                conn.settimeout(None)
                 return_message = commands.commands[msg]()
-                conn.send(return_message[0].encode(FORMAT)) #manda a quantidades de Bytes da próxima msg
+                conn.send(return_message[0]) #manda a quantidades de Bytes da próxima msg
                 conn.send(return_message[1].encode(FORMAT)) #manda a próxima msg
             
             if "!POST" in msg:
+                conn.settimeout(None)
                 get_data = json.loads(msg)
                 return_message = commands.commands[get_data["key"]](get_data["msg"])
                 conn.send(return_message[0].encode(FORMAT)) # manda a quantidades de Bytes da próxima msg
@@ -50,7 +54,7 @@ def start():
         conn, addr = server.accept() #Aceita conexões
         thread = threading.Thread(target=handler, args=(conn, addr)) #Separa as cocxões em Threads para melhorar o desempenho e não criar filas de espera
         thread.start() #Inicia o novo Thread
-        print(f"[ACTIVE CONNECTIONS] {threading.active_count()-1}\n")
+        print(f"[ACTIVE CONNECTIONS] {threading.active_count()-1}")
 
 
 if __name__ == "__main__":
