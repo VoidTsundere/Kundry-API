@@ -4,6 +4,7 @@ import objects
 import pymongo
 
 bd_pass = "iDn4HavIPEKnOAJl"
+VERSION = "Gliphnyr Live Alpha 0.0.2"
 
 battle_list = []
 acc_list = []
@@ -113,10 +114,36 @@ class account:
         return #! here
 
     def add_currency(ID, currency, ammount):
-        acc_data = get_account_data(ID)
+        acc_data = account.get_account_data(ID)
+        
+        new_ammount = acc_data["currency"][currency]+ammount
+        acc_data["currency"][currency] = new_ammount
+            
+        update_data = {"$set":{"currency":acc_data["currency"]}}
+        ACCOUNTS.update_one({"id": ID}, update_data)
+
+    def level_up_character(ID, character_id): #! pos-inventory
+        acc_data = account.get_account_data(ID)
+        
+        for char in acc_data["characters"]:
+            if char["id"] == character_id:
+                char_element = objects.characters.id.list[char["id"]]["elemnt"]
+                
+                if char["lvl"] >= 10:
+                    print("lvl >= 10")
+                    
+                else:
+                    upgrade_materials = objects.level.character_list[char_element]["level_up_materials_basic"]
+                    upgrade_cost = int(char["lvl"]*upgrade_materials[1])
+                    print(upgrade_cost)
         return
 
-
+    def add_to_inv():
+        return
+    
+    def remove_from_inv():
+        return
+    
 class battle:
     def battle_code():
         code = ''.join(random.choice(ascii_uppercase) for x in range(4))
@@ -148,7 +175,8 @@ class battle:
                 action_list[action](battle) #executa a função passada pela api
         return
     
-    def create(characters_list, enemy_list): #! REWORK?
+    def create(characters_list, enemy_list, ID): #! REWORK?
+        acc_data = account.get_account_data(ID)
         battle_order = []
         for idx in range(0, max(len(characters_list), len(enemy_list))):
             try:
@@ -163,7 +191,22 @@ class battle:
                 
         match_data = objects.obj.battle_obj
         match_data.update({"id":battle.battle_code(),"entity_list": battle_order})
-                
+        
+        for num, entity in enumerate(match_data["entity_list"]):
+            stats = dict(objects.obj.entity_stats_obj)
+            stats["id"] = entity
+            
+            for character in acc_data["characters"]:
+                if character["id"] in characters_list:
+                    print(character, characters_list)
+            compute_atk = ()
+            
+            stats["computed_atk"]
+            
+            match_data["entity_stats"].append(stats)
+        
+        
+        battle_list.append(match_data)
         return match_data
     
     def next_turn(match_id): #! IMPROVE passa para o próximo turno
@@ -184,11 +227,17 @@ if __name__ == "__main__":
     ACCOUNTS = db.ACCOUNTS
     BATTLES = db.BATTLES
     
+    battle.create(["C-1"], ["E-0"], 916072406)
+
+    
     
     #ACCOUNTS.insert_one(account.create_account("dere", "dere123"))
     #BATTLES.insert_one(battle.create(['c0'],['e1']))
     
-    #account.gacha_pull(875495425, "pool-0", 10)
-    account.add_new_character(875495425, "C-1")
+    #account.gacha_pull(875495425, "pool-0", 10) 
+    
+    #account.add_new_character(916072406, "C-1")
+    #account.add_currency(875495425, "souls", 5)
+    #account.level_up_character(875495425, "C-1")
     
     #print("\n\n", ACCOUNTS.find_one({"id": 200545478}))

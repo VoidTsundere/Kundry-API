@@ -44,7 +44,7 @@ def handler(conn, addr):
                 conn.send(return_message[0].encode(FORMAT)) # manda a quantidades de Bytes da próxima msg
                 conn.send(return_message[1].encode(FORMAT))  # manda a próxima msg
         
-    conn.close() #fecha a conexão ao sair do loop
+    conn.close() #fecha a conexão ao sair do loop 
 
 
 def start():
