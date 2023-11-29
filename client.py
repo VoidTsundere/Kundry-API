@@ -43,5 +43,5 @@ def Send_post(key, msg):
     return get()
 
 Send_get("!GET_TEST")
-#Send_post("!POST_TEST", "dere")
+#Send_post("!POST_TEST", "deree")
 Send_get(DISCONNECT_MESSAGE)
